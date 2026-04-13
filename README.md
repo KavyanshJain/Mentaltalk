@@ -1,17 +1,14 @@
-<<<<<<< HEAD
 ---
-
 title: MentalTalk
 emoji: 🧠
 colorFrom: green
 colorTo: blue
 sdk: gradio
-sdk_version: "5.29.0"
+sdk_version: 6.12.0
 app_file: app.py
 pinned: false
 license: mit
 ---
-
 # 🧠 MentalTalk — AI Mental Health Companion
 
 A compassionate, AI-powered mental health chatbot built with **Gradio**, **Gemini 2.5 Flash-Lite**, and a **RAG pipeline** backed by WHO & clinical mental health resources.
@@ -76,7 +73,7 @@ pip install -r requirements.txt
 ```
 
 > **Note (Disk Space):** The embedding model (`google/embeddinggemma-300m`) will be downloaded (~600MB) on first run. If your C: drive is full, the app automatically caches it to `D:\hf_cache` on Windows.
-
+>
 ### Step 2: Set Your API Key
 
 **Option A — Environment variable (recommended for quick testing):**
@@ -170,14 +167,12 @@ chroma_db/
 # Clone your Space
 git clone https://huggingface.co/spaces/YOUR_USERNAME/MentalTalk
 cd MentalTalk
-
 # Copy your project files
 copy /Y D:\project\Mentaltalk-1\app.py .
 copy /Y D:\project\Mentaltalk-1\requirements.txt .
 xcopy /E /I D:\project\Mentaltalk-1\static static
 xcopy /E /I D:\project\Mentaltalk-1\rag rag
 xcopy /E /I D:\project\Mentaltalk-1\chroma_db chroma_db
-
 # Push to HF
 git add .
 git commit -m "Initial MentalTalk deployment"
