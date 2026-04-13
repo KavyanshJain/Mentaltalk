@@ -20,6 +20,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 960015e (minor changes)
 # Load .env file if python-dotenv is available (for local development)
 try:
     from dotenv import load_dotenv

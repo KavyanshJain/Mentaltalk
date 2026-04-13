@@ -1,13 +1,6 @@
 <<<<<<< HEAD
 ---
-license: mit
-tags:
-- unsloth
-- trl
-- sft
----
-=======
----
+
 title: MentalTalk
 emoji: 🧠
 colorFrom: green
@@ -125,7 +118,7 @@ You should see output like:
 
 ### Step 4: Open in Browser
 
-Navigate to **http://localhost:7860**
+Navigate to **<http://localhost:7860>**
 
 - Sign in with any name (or continue as Guest)
 - Try the quick prompts or type your own message
@@ -198,6 +191,7 @@ The Space will automatically install dependencies and start. First build takes ~
 ### Step 5: Share Your Space
 
 Once running, your Space URL will be:
+
 ```
 https://huggingface.co/spaces/YOUR_USERNAME/MentalTalk
 ```
@@ -271,4 +265,3 @@ These files are only used during development and are **not needed** for deployme
 This project is for educational and demonstration purposes.
 
 Mental health resources referenced: WHO mhGAP guidelines, CBT manuals, NIMHANS guidelines, and other publicly available clinical documents.
->>>>>>> 95f21cd (minor changes)

@@ -1,0 +1,171 @@
+<!-- ═══════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════ -->
+<div id="modal-bg">
+  <div id="modal">
+    <div class="m-logo">
+      <div class="m-icon">🧠</div>
+      <div class="m-title">Welcome to Mental Talk</div>
+      <div class="m-sub">Your AI-powered mental health companion</div>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn"        onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Error message (shown by JS) -->
+    <div id="auth-error"></div>
+
+    <!-- Sign-in form -->
+    <div id="login-form">
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="li-name" placeholder="Your username" autocomplete="username"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="li-pass" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+      <button class="fb" id="login-btn" onclick="doLogin()">Sign In →</button>
+      <div class="divider">or</div>
+      <button class="fb sec" onclick="doGuest()">👤 Continue as Guest</button>
+    </div>
+
+    <!-- Sign-up form -->
+    <div id="signup-form">
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="su-name" placeholder="Choose a username" autocomplete="username"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="su-pass" type="password" placeholder="Create a password" autocomplete="new-password"></div>
+      <button class="fb" id="signup-btn" onclick="doSignup()">Create Account →</button>
+      <div class="divider">or</div>
+      <button class="fb sec" onclick="doGuest()">👤 Continue as Guest</button>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px">🔒 Your conversations are private & secure</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN SHELL
+═══════════════════════════════════════ -->
+<div id="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+    <div id="sb-head">
+      <div class="logo">
+        <div class="logo-icon">🧠</div>
+        <div class="logo-text">Mental Talk</div>
+      </div>
+      <div class="logo-sub">AI Mental Health</div>
+    </div>
+
+    <div id="sb-body">
+      <div class="sec-lbl">Chat History</div>
+      <div id="hist-list">
+        <p style="color:var(--muted);font-size:12px;padding:8px 16px">No conversations yet</p>
+      </div>
+
+      <div class="sec-lbl">Mood Dashboard</div>
+
+      <!-- Mood input card -->
+      <div id="mood-card">
+        <div class="mc-head">
+          <span class="mc-title">How are you feeling?</span>
+          <span class="mc-date" id="mc-date"></span>
+        </div>
+        <div class="mood-row">
+          <button class="mbtn" onclick="pickMood(5,this)">😄<span class="lbl">Great</span></button>
+          <button class="mbtn" onclick="pickMood(4,this)">😊<span class="lbl">Good</span></button>
+          <button class="mbtn sel" onclick="pickMood(3,this)">😐<span class="lbl">Okay</span></button>
+          <button class="mbtn" onclick="pickMood(2,this)">😔<span class="lbl">Low</span></button>
+          <button class="mbtn" onclick="pickMood(1,this)">😢<span class="lbl">Hard</span></button>
+        </div>
+        <div id="mood-score">3</div>
+        <div id="mood-lbl">Feeling okay today</div>
+      </div>
+
+      <!-- Weekly chart -->
+      <div id="chart-card">
+        <div class="chart-ttl">7-DAY MOOD PATTERN</div>
+        <div id="chart-body">
+          <p style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Log moods to see your pattern</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val" id="avg-mood">—</div>
+          <div class="stat-lbl">Avg Mood<br>This Week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="sess-count">0</div>
+          <div class="stat-lbl">Total<br>Sessions</div>
+        </div>
+      </div>
+
+      <!-- Streak -->
+      <div id="streak-card">
+        <span class="streak-icon">🔥</span>
+        <div>
+          <div class="streak-txt" id="streak-txt">Start your streak!</div>
+          <div class="streak-sub">Check in daily</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN PANEL ── -->
+  <div id="main">
+
+    <!-- Top bar -->
+    <div id="topbar">
+      <div id="topbar-title" style="font-family:'Playfair Display',serif;font-size:17px">Welcome 👋</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="crisis-btn" onclick="toggleCrisis()">🆘 <span>Crisis Support</span></button>
+        <div class="user-chip">
+          <div class="u-avatar" id="u-initial">G</div>
+          <span id="u-name">Guest</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crisis bar (hidden by default) -->
+    <div id="crisis-bar" style="display:none;background:rgba(229,115,115,.08);border-bottom:1px solid rgba(229,115,115,.2);
+         padding:10px 24px;font-size:12px;color:var(--text);line-height:1.9">
+      <strong style="color:var(--danger)">🆘 Crisis Resources (India)</strong> &nbsp;·&nbsp;
+      iCall: <strong>9152987821</strong> (Mon–Sat 8am–10pm) &nbsp;·&nbsp;
+      Vandrevala Foundation: <strong>1860-2662-345</strong> (24/7) &nbsp;·&nbsp;
+      NIMHANS: <strong>080-46110007</strong> &nbsp;·&nbsp;
+      <em style="color:var(--muted)">Emergency: 112</em>
+      <button onclick="toggleCrisis()" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+      <!-- Welcome / quick prompts -->
+      <div id="welcome">
+        <div class="w-orb">🧠</div>
+        <div class="w-title">Hello, <span id="greet-name">Friend</span></div>
+        <div class="w-sub">I'm here to listen, support and guide you. What's on your mind today?</div>
+        <div class="qp-grid">
+          <button class="qp-btn" onclick="quickSend(this)">😰 I'm feeling anxious</button>
+          <button class="qp-btn" onclick="quickSend(this)">😴 Can't sleep well</button>
+          <button class="qp-btn" onclick="quickSend(this)">😔 Feeling low today</button>
+          <button class="qp-btn" onclick="quickSend(this)">🧘 Guide me to relax</button>
+          <button class="qp-btn" onclick="quickSend(this)">💬 I just need to talk</button>
+          <button class="qp-btn" onclick="quickSend(this)">📚 Coping strategies</button>
+        </div>
+      </div>
+
+      <!-- Floating chat -->
+      <div id="chat-wrap">
+        <div id="msgs"></div>
+        <div id="input-bar">
+          <textarea id="inp" rows="1"
+            placeholder="Share what's on your mind…"
+            oninput="autoGrow(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();triggerSend()}"
+          ></textarea>
+          <button id="send-btn" onclick="triggerSend()">➤</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

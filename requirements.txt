@@ -1,0 +1,21 @@
+# ── MentalTalk Dependencies ──────────────────────────────────────
+# Core UI
+gradio>=4.0
+
+# Gemini LLM
+google-genai>=1.0
+
+# RAG / Vector DB
+chromadb>=0.4
+sentence-transformers>=2.0
+
+# Env file support (local dev)
+python-dotenv>=1.0
+
+# Database & Auth
+psycopg2-binary>=2.9
+bcrypt>=4.0
+
+# ── Ingestion only (not needed at runtime) ───────────────────────
+# PyMuPDF>=1.23
+# langchain-text-splitters>=0.2
