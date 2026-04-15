@@ -60,7 +60,6 @@ def build_chroma(all_chunks: list[dict], chroma_dir: str, collection_name: str):
         embedding_function=gemini_ef
     )
 
-    # Add in batches of 50 to avoid API rate limits
     batch_size = 50
     for i in range(0, len(all_chunks), batch_size):
         batch = all_chunks[i : i + batch_size]

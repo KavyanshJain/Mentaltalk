@@ -4,7 +4,6 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-# Resolve paths relative to the project root (parent of `rag/`)
 _PROJECT_ROOT   = Path(__file__).resolve().parent.parent
 CHROMA_DIR      = str(_PROJECT_ROOT / "chroma_db")
 COLLECTION_NAME = "mental_health"
@@ -27,10 +26,7 @@ def load_collection():
             f"Run ingest.py first to build the vector store."
         )
 
-<<<<<<< HEAD
-=======
     # google/embeddinggemma-300m is a gated model — pass HF_TOKEN if available
->>>>>>> 960015e (minor changes)
     hf_token = os.environ.get("HF_TOKEN")
     embed_fn = SentenceTransformerEmbeddingFunction(
         model_name=EMBED_MODEL,

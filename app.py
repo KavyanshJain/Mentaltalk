@@ -20,10 +20,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 960015e (minor changes)
 # Load .env file if python-dotenv is available (for local development)
 try:
     from dotenv import load_dotenv
@@ -264,8 +260,6 @@ def get_bot_response(user_msg: str, chat_history: list, username: str) -> str:
     msg_lower = user_msg.lower()
 
     # ── Fast-path: crisis detection ──────────────────────────────────────────
-    # If the message contains crisis keywords, we still call the LLM but
-    # prepend an urgent context directive.
     is_crisis = any(kw in msg_lower for kw in _CRISIS_KEYWORDS)
 
     # ── Step 1: Retrieve RAG context ─────────────────────────────────────────
@@ -369,7 +363,6 @@ def get_bot_response(user_msg: str, chat_history: list, username: str) -> str:
             log.info(f"🤖 Gemini responded ({len(bot_raw)} chars)")
             return bot_html
         else:
-            # Response was blocked or empty
             log.warning("Gemini returned empty/blocked response")
             if is_crisis:
                 return get_crisis_response()
@@ -397,7 +390,6 @@ def _build_hist_html(chat_hist: list) -> str:
     for i, item in enumerate(reversed(chat_hist[-8:])):
         msg   = item.get("user", "")
         short = (msg[:34] + "…") if len(msg) > 34 else msg
-        # Escape HTML in user text for safety
         short = short.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         color = item.get("color", "#7a8f86")
         label = item.get("mood_label", "")
@@ -417,30 +409,22 @@ def _build_hist_html(chat_hist: list) -> str:
     return html
 
 
-
 #  SECTION 10 — GRADIO APPLICATION
 
 def build_app():
-    """Construct and return the full Gradio Blocks application.
-
-    Returns:
-        demo — Gradio Blocks app (css/theme/head baked in for Gradio 5.x).
-    """
+    """Construct and return the full Gradio Blocks application."""
     static_dir = PROJECT_ROOT / "static"
 
-    # Load frontend assets from separate files
     PAGE_HTML = (static_dir / "index.html").read_text(encoding="utf-8")
     APP_CSS   = (static_dir / "style.css").read_text(encoding="utf-8")
     APP_JS    = (static_dir / "script.js").read_text(encoding="utf-8")
 
-    # ── <head> injection: Google Fonts + client-side JS ──────────────────────
-    # In Gradio 5.x css/theme/head go into gr.Blocks(), NOT launch().
-    APP_HEAD = (
-        '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+    # Gradio 6.x: head= parameter removed; inject fonts+JS via a hidden gr.HTML component
+    APP_HEAD_HTML = (
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link href="https://fonts.googleapis.com/css2?family='
         'Playfair+Display:ital,wght@0,400;0,600;1,400&family='
-        'DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">\n'
-        f'<script>\n{APP_JS}\n</script>'
+        'DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">'
     )
 
     APP_THEME = gr.themes.Base(
@@ -449,20 +433,24 @@ def build_app():
         font=gr.themes.GoogleFont("DM Sans"),
     )
 
-    # ── Gradio Blocks ────────────────────────────────────────────────────────
     with gr.Blocks(
         title="Mental Talk — AI Mental Health Companion",
         css=APP_CSS,
         theme=APP_THEME,
-        head=APP_HEAD,
     ) as demo:
 
-        # ── Session state ────────────────────────────────────────────────────
-        chat_history_state = gr.State([])   # [{user, bot_raw, bot_html, mood_label, color, date}]
-        mood_history_state = gr.State([])   # [{score, label, color, date}]
-        user_id_state      = gr.State(0)    # 0 = guest, >0 = registered DB user
+        # Inject fonts + JS via hidden HTML component (Gradio 6.x compatible)
+        gr.HTML(
+            value=APP_HEAD_HTML + f'<script>\n{APP_JS}\n</script>',
+            visible=False,
+        )
 
-        # ── Full-page HTML UI (body content only — no CSS/JS) ────────────────
+        # ── Session state ────────────────────────────────────────────────────
+        chat_history_state = gr.State([])
+        mood_history_state = gr.State([])
+        user_id_state      = gr.State(0)
+
+        # ── Full-page HTML UI ────────────────────────────────────────────────
         ui = gr.HTML(value=PAGE_HTML)
 
         # ── Bridge textboxes (CSS hides them off-screen) ─────────────────────
@@ -476,13 +464,6 @@ def build_app():
 
         # ── Handler: Auth ────────────────────────────────────────────────────
         def handle_auth(auth_json: str):
-            """Process login/signup requests from the frontend.
-
-            Input JSON: {"action": "login"|"signup", "username": "...", "password": "..."}
-            Output JSON: {"ok": true, "user_id": N, "username": "...", "stats": {...},
-                          "moods": [...], "chat_count": N}
-                     or: {"ok": false, "error": "..."}
-            """
             auth_json = (auth_json or "").strip()
             if not auth_json:
                 return 0, ""
@@ -529,7 +510,6 @@ def build_app():
                     stats = db.get_user_stats(uid)
                     moods = db.get_recent_moods(uid, limit=7)
                     chat_count = len(db.get_chat_history(uid, limit=1))
-                    # Serialize dates for JSON
                     for m in moods:
                         if "created_at" in m:
                             m["created_at"] = str(m["created_at"])
@@ -557,22 +537,18 @@ def build_app():
             username: str,
             user_id: int,
         ):
-            """Process a user chat message and return the bot's reply."""
             user_msg = (user_msg or "").strip()
             if not user_msg:
                 return chat_hist, "", ""
 
             username = (username or "Friend").strip() or "Friend"
 
-            # Generate bot response via RAG + Gemini
             bot_html = get_bot_response(user_msg, chat_hist, username)
 
-            # Store raw text (strip HTML) for conversation history sent to Gemini
             bot_raw = re.sub(r"<[^>]+>", "", bot_html)
             bot_raw = bot_raw.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
             bot_raw = bot_raw.replace("&quot;", '"').replace("&#039;", "'")
 
-            # Build history entry
             today = datetime.date.today().strftime("%d %b")
             current_mood_label = mood_hist[-1]["label"] if mood_hist else "😐 Okay"
             current_mood_color = mood_hist[-1]["color"] if mood_hist else "#e8c4a0"
@@ -586,7 +562,6 @@ def build_app():
                 "date":       today,
             }]
 
-            # Persist to DB for registered users (not guests)
             if user_id and user_id > 0:
                 try:
                     db.save_chat_message(
@@ -597,9 +572,7 @@ def build_app():
                 except Exception as e:
                     log.warning(f"DB save failed (non-fatal): {e}")
 
-            # Build sidebar history HTML
             hist_html = _build_hist_html(chat_hist)
-
             log.info(f"💬 {username}: \"{user_msg[:50]}...\" → response sent")
             return chat_hist, bot_html, hist_html
 
@@ -610,7 +583,6 @@ def build_app():
             username: str,
             user_id: int,
         ):
-            """Process a mood selection and persist it."""
             mood_json = (mood_json or "").strip()
             if not mood_json:
                 return mood_hist
@@ -619,7 +591,6 @@ def build_app():
                 data = json.loads(mood_json)
                 mood_hist = mood_hist + [data]
 
-                # Persist to DB for registered users (not guests)
                 if user_id and user_id > 0:
                     db.save_mood(
                         user_id,
@@ -634,18 +605,23 @@ def build_app():
             return mood_hist
 
         # ── Wire events ──────────────────────────────────────────────────────
-        # show_progress="hidden" suppresses Gradio's built-in loading overlay
-        # which otherwise blocks the custom HTML chat UI (looks "stuck").
+        # Both .submit() and .change() are wired for every bridge textbox.
+        # Gradio 6.x (Svelte internals) may fire either depending on how the
+        # JS dispatches events — wiring both ensures the handler always fires.
 
-        # Auth: login / signup
         auth_input.submit(
             handle_auth,
             inputs=[auth_input],
             outputs=[user_id_state, auth_out],
             show_progress="hidden",
         )
+        auth_input.change(
+            handle_auth,
+            inputs=[auth_input],
+            outputs=[user_id_state, auth_out],
+            show_progress="hidden",
+        )
 
-        # Chat: when JS submits a message via the hidden textbox
         user_input.submit(
             handle_chat,
             inputs=[user_input, chat_history_state, mood_history_state,
@@ -654,16 +630,29 @@ def build_app():
             show_progress="hidden",
             concurrency_limit=None,
         )
+        user_input.change(
+            handle_chat,
+            inputs=[user_input, chat_history_state, mood_history_state,
+                    username_input, user_id_state],
+            outputs=[chat_history_state, reply_out, hist_out],
+            show_progress="hidden",
+            concurrency_limit=None,
+        )
 
-        # Mood: when JS pushes a mood selection via the hidden textbox
         mood_input.submit(
             handle_mood,
             inputs=[mood_input, mood_history_state, username_input, user_id_state],
             outputs=[mood_history_state],
             show_progress="hidden",
         )
+        mood_input.change(
+            handle_mood,
+            inputs=[mood_input, mood_history_state, username_input, user_id_state],
+            outputs=[mood_history_state],
+            show_progress="hidden",
+        )
 
-        # Bridge: when Python updates reply_out, push it to the custom chat UI
+        # Bridge: push reply to custom chat UI
         reply_out.change(
             fn=None,
             inputs=[reply_out, hist_out],
@@ -678,7 +667,7 @@ def build_app():
             show_progress="hidden",
         )
 
-        # Bridge: when Python updates auth_out, push auth result to JS
+        # Bridge: push auth result to JS
         auth_out.change(
             fn=None,
             inputs=[auth_out],
@@ -702,12 +691,9 @@ log.info("=" * 60)
 log.info("  MentalTalk — AI Mental Health Companion")
 log.info("=" * 60)
 
-# Build at module level — required for HF Spaces to discover the `demo` object.
-# css / theme / head are baked into gr.Blocks() (Gradio 5.x style).
 demo = build_app()
 
 if __name__ == "__main__":
-    # Local dev: python app.py
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
@@ -715,7 +701,7 @@ if __name__ == "__main__":
         ssr_mode=False,
     )
 else:
-    # HF Spaces runner
+    # HF Spaces: platform assigns port
     demo.launch(
         server_name="0.0.0.0",
         share=False,

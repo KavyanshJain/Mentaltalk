@@ -1,16 +1,15 @@
 // ══════════════════════════════════════════════════════════════════════════════
-//  MentalTalk — Client-Side JavaScript
-//  Injected via Gradio launch(head=...) so all functions are at global scope.
+//  MentalTalk — Client-Side JavaScript  (Gradio 6.x compatible)
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 var currentUser = 'Friend';
 var currentMood = 3;
 var sessionCount = 0;
-var moodHistory = [];   // [{score, label, color, date}]
-var chatHistory = [];   // [{user, bot, mood_label, color, date}]
+var moodHistory = [];
+var chatHistory = [];
 var isWaiting = false;
-var isGuest = true; // true = no DB persistence
+var isGuest = true;
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 function mtInit() {
@@ -23,8 +22,53 @@ document.addEventListener('DOMContentLoaded', mtInit);
 setTimeout(mtInit, 500);
 setTimeout(mtInit, 1500);
 
-//  LOGIN / SIGNUP — Server-validated via Gradio bridge
+// ── GRADIO 6.x BRIDGE ────────────────────────────────────────────────────────
+// Gradio 6.x uses Svelte internally. The reliable dispatch sequence is:
+// native setter → input event on inner element → change event on inner element
+// → input event on wrapper container → Enter keydown after 50ms delay.
 
+function _gradioSubmit(elemId, value) {
+  var container = document.getElementById(elemId);
+  if (!container) {
+    console.error('[Bridge] Container not found:', elemId);
+    return false;
+  }
+
+  var inner = container.querySelector('textarea') || container.querySelector('input');
+  if (!inner) {
+    console.error('[Bridge] Inner input not found in:', elemId);
+    return false;
+  }
+
+  // Set value via native setter to bypass Svelte's reactive state
+  var proto = (inner.tagName === 'TEXTAREA')
+    ? window.HTMLTextAreaElement.prototype
+    : window.HTMLInputElement.prototype;
+  var setter = Object.getOwnPropertyDescriptor(proto, 'value');
+  if (setter && setter.set) setter.set.call(inner, value);
+  else inner.value = value;
+
+  // Fire events in order Gradio 6.x expects
+  inner.dispatchEvent(new Event('input', { bubbles: true }));
+  inner.dispatchEvent(new Event('change', { bubbles: true }));
+  container.dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Enter keydown triggers .submit() binding after state settles
+  setTimeout(function () {
+    inner.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+      bubbles: true, cancelable: true, composed: true
+    }));
+    inner.dispatchEvent(new KeyboardEvent('keyup', {
+      key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
+      bubbles: true, cancelable: true
+    }));
+  }, 50);
+
+  return true;
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
 function switchTab(t) {
   document.getElementById('login-form').style.display = t === 'login' ? 'block' : 'none';
   document.getElementById('signup-form').style.display = t === 'signup' ? 'block' : 'none';
@@ -45,8 +89,7 @@ function setAuthLoading(loading) {
   var btns = document.querySelectorAll('#login-btn, #signup-btn');
   for (var i = 0; i < btns.length; i++) {
     btns[i].disabled = loading;
-    if (loading) btns[i].classList.add('loading');
-    else btns[i].classList.remove('loading');
+    btns[i].classList.toggle('loading', loading);
   }
 }
 
@@ -54,55 +97,33 @@ function doLogin() {
   var name = (document.getElementById('li-name').value || '').trim();
   var pass = document.getElementById('li-pass').value || '';
   document.getElementById('auth-error').style.display = 'none';
-
-  if (!name || !pass) {
-    showAuthError('Please enter both username and password');
-    return;
-  }
-
+  if (!name || !pass) { showAuthError('Please enter both username and password'); return; }
   setAuthLoading(true);
-  sendAuthToGradio({ action: 'login', username: name, password: pass });
+  var ok = _gradioSubmit('gradio-auth-input', JSON.stringify({ action: 'login', username: name, password: pass }));
+  if (!ok) { showAuthError('Auth bridge not ready — please reload'); setAuthLoading(false); }
 }
 
 function doSignup() {
   var name = (document.getElementById('su-name').value || '').trim();
   var pass = document.getElementById('su-pass').value || '';
   document.getElementById('auth-error').style.display = 'none';
-
-  if (!name || !pass) {
-    showAuthError('Please enter both username and password');
-    return;
-  }
-  if (name.length < 3) {
-    showAuthError('Username must be at least 3 characters');
-    return;
-  }
-  if (pass.length < 4) {
-    showAuthError('Password must be at least 4 characters');
-    return;
-  }
-
+  if (!name || !pass) { showAuthError('Please enter both username and password'); return; }
+  if (name.length < 3) { showAuthError('Username must be at least 3 characters'); return; }
+  if (pass.length < 4) { showAuthError('Password must be at least 4 characters'); return; }
   setAuthLoading(true);
-  sendAuthToGradio({ action: 'signup', username: name, password: pass });
+  var ok = _gradioSubmit('gradio-auth-input', JSON.stringify({ action: 'signup', username: name, password: pass }));
+  if (!ok) { showAuthError('Auth bridge not ready — please reload'); setAuthLoading(false); }
 }
 
-/** Called by Gradio bridge when Python returns auth result */
 function receiveAuth(jsonStr) {
   setAuthLoading(false);
-
   var resp;
   try { resp = JSON.parse(jsonStr); } catch (e) { showAuthError('Unexpected error'); return; }
+  if (!resp.ok) { showAuthError(resp.error || 'Authentication failed'); return; }
 
-  if (!resp.ok) {
-    showAuthError(resp.error || 'Authentication failed');
-    return;
-  }
-
-  // Auth successful — apply user
   currentUser = resp.username || 'Friend';
   isGuest = false;
 
-  // Restore stats
   if (resp.stats) {
     sessionCount = resp.stats.session_count || 0;
     document.getElementById('sess-count').textContent = sessionCount;
@@ -111,17 +132,11 @@ function receiveAuth(jsonStr) {
       streak >= 2 ? streak + '-Day Streak!' : 'Start your streak!';
   }
 
-  // Restore mood history (from DB)
   if (resp.moods && resp.moods.length > 0) {
     moodHistory = [];
     for (var i = 0; i < resp.moods.length; i++) {
       var m = resp.moods[i];
-      moodHistory.push({
-        score: m.score,
-        label: m.label,
-        color: m.color,
-        date: m.day_short || ''
-      });
+      moodHistory.push({ score: m.score, label: m.label, color: m.color, date: m.day_short || '' });
     }
     renderChart();
     updateStats();
@@ -136,6 +151,33 @@ function doGuest() {
   applyUser();
 }
 
+function doLogout() {
+  currentUser = 'Friend';
+  isGuest = true;
+  sessionCount = 0;
+  moodHistory = [];
+  chatHistory = [];
+  isWaiting = false;
+  if (typingEl) { typingEl.remove(); typingEl = null; }
+
+  document.getElementById('msgs').innerHTML = '';
+  document.getElementById('msgs').classList.remove('open');
+  document.getElementById('welcome').classList.remove('hidden');
+  document.getElementById('hist-list').innerHTML =
+    '<p style="color:var(--muted);font-size:12px;padding:8px 16px">No conversations yet</p>';
+  document.getElementById('sess-count').textContent = '0';
+  document.getElementById('avg-mood').textContent = '\u2014';
+  document.getElementById('streak-txt').textContent = 'Start your streak!';
+  document.getElementById('chart-body').innerHTML =
+    '<p style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Log moods to see your pattern</p>';
+
+  document.getElementById('modal-bg').classList.remove('hidden');
+  document.getElementById('li-name').value = '';
+  document.getElementById('li-pass').value = '';
+  document.getElementById('auth-error').style.display = 'none';
+  switchTab('login');
+}
+
 function applyUser() {
   document.getElementById('modal-bg').classList.add('hidden');
   document.getElementById('u-name').textContent = currentUser;
@@ -143,19 +185,28 @@ function applyUser() {
   document.getElementById('greet-name').textContent = currentUser;
   document.getElementById('topbar-title').innerHTML =
     'Welcome back, <span style="color:var(--accent2)">' + currentUser + '</span> \ud83d\udc4b';
-  // Push username to Gradio backend state
-  pushUsernameToGradio(currentUser);
+
+  // Push username to Gradio state (value-only, no submit needed)
+  var container = document.getElementById('gradio-username-input');
+  if (container) {
+    var inner = container.querySelector('textarea') || container.querySelector('input');
+    if (inner) {
+      var proto = inner.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+      var setter = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (setter && setter.set) setter.set.call(inner, currentUser);
+      else inner.value = currentUser;
+      inner.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
 }
 
-
-//  CRISIS TOGGLE
+// ── CRISIS ────────────────────────────────────────────────────────────────────
 function toggleCrisis() {
   var cb = document.getElementById('crisis-bar');
   cb.style.display = cb.style.display === 'none' ? 'block' : 'none';
 }
 
-//  MOOD
-
+// ── MOOD ──────────────────────────────────────────────────────────────────────
 var MOOD_META = {
   5: ['Feeling great today! \ud83c\udf1f', '#63b396'],
   4: ['Having a good day \ud83d\ude0a', '#a8d5c2'],
@@ -175,17 +226,14 @@ function pickMood(score, btn) {
   document.getElementById('mood-score').textContent = score;
   document.getElementById('mood-lbl').textContent = meta[0];
 
-  // Record locally
   var d = new Date();
-  moodHistory.push({
-    score: score, label: MOOD_LABELS[score], color: meta[1],
-    date: DAY_SHORT[d.getDay()]
-  });
+  moodHistory.push({ score: score, label: MOOD_LABELS[score], color: meta[1], date: DAY_SHORT[d.getDay()] });
   renderChart();
   updateStats();
 
-  // Push to Gradio Python state (DB persistence for registered users)
-  pushMoodToGradio(score, MOOD_LABELS[score], meta[1], DAY_SHORT[d.getDay()]);
+  _gradioSubmit('gradio-mood-input', JSON.stringify({
+    score: score, label: MOOD_LABELS[score], color: meta[1], date: DAY_SHORT[d.getDay()]
+  }));
 }
 
 function renderChart() {
@@ -214,9 +262,12 @@ function updateStats() {
   document.getElementById('streak-txt').textContent = n >= 2 ? n + '-Day Streak!' : 'Start your streak!';
 }
 
-//  CHAT
+// ── CHAT ──────────────────────────────────────────────────────────────────────
 function quickSend(btn) {
-  var text = btn.textContent.replace(/^[^\s]+\s/, '');
+  var raw = btn.textContent || btn.innerText || '';
+  // Strip leading emoji + space robustly
+  var text = raw.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF} ]+/u, '').trim();
+  if (!text) text = raw.trim();
   document.getElementById('inp').value = text;
   triggerSend();
 }
@@ -242,7 +293,13 @@ function triggerSend() {
   appendMsg('user', escapeHtml(text));
   showTyping();
   isWaiting = true;
-  sendToGradio(text);
+
+  var ok = _gradioSubmit('gradio-user-input', text);
+  if (!ok) {
+    hideTyping();
+    isWaiting = false;
+    appendMsg('ai', 'Connection error — could not reach backend. Please reload the page.');
+  }
 }
 
 function showChat() {
@@ -277,7 +334,6 @@ function hideTyping() {
   if (typingEl) { typingEl.remove(); typingEl = null; }
 }
 
-// Called by Gradio after Python responds
 function receiveReply(botText, historyHtml) {
   hideTyping();
   isWaiting = false;
@@ -285,79 +341,4 @@ function receiveReply(botText, historyHtml) {
   sessionCount++;
   document.getElementById('sess-count').textContent = sessionCount;
   if (historyHtml) document.getElementById('hist-list').innerHTML = historyHtml;
-}
-
-//  GRADIO BRIDGE — communicates with Python backend via hidden textboxes
-
-/** Find the inner <textarea> or <input> inside a Gradio component by its elem_id */
-function findGradioInput(elemId) {
-  var container = document.getElementById(elemId);
-  if (!container) return null;
-  return container.querySelector('textarea') || container.querySelector('input');
-}
-
-/** Set a hidden Gradio textbox value and dispatch an input event */
-function setGradioValue(elemId, value) {
-  var el = findGradioInput(elemId);
-  if (!el) { console.warn('Bridge element not found:', elemId); return; }
-  var nativeSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLTextAreaElement.prototype, 'value'
-  ) || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-  if (nativeSetter && nativeSetter.set) {
-    nativeSetter.set.call(el, value);
-  } else {
-    el.value = value;
-  }
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-/** Trigger a .submit() by dispatching Enter keydown */
-function triggerGradioSubmit(elemId) {
-  var el = findGradioInput(elemId);
-  if (!el) return;
-  setTimeout(function () {
-    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
-  }, 50);
-}
-
-/** Send a chat message to Python */
-function sendToGradio(text) {
-  var el = findGradioInput('gradio-user-input');
-  if (!el) { console.warn('Chat bridge not found'); receiveReply('Bridge error — please reload.', ''); return; }
-
-  var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-  if (setter && setter.set) setter.set.call(el, text);
-  else el.value = text;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  triggerGradioSubmit('gradio-user-input');
-}
-
-/** Send auth request to Python */
-function sendAuthToGradio(data) {
-  var el = findGradioInput('gradio-auth-input');
-  if (!el) { showAuthError('Auth bridge not ready — please reload'); setAuthLoading(false); return; }
-
-  var payload = JSON.stringify(data);
-  var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-  if (setter && setter.set) setter.set.call(el, payload);
-  else el.value = payload;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  triggerGradioSubmit('gradio-auth-input');
-}
-
-/** Push mood data to Python for persistence */
-function pushMoodToGradio(score, label, color, dayShort) {
-  var el = findGradioInput('gradio-mood-input');
-  if (!el) return;
-  var payload = JSON.stringify({ score: score, label: label, color: color, date: dayShort });
-  var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value');
-  if (setter && setter.set) setter.set.call(el, payload);
-  else el.value = payload;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  triggerGradioSubmit('gradio-mood-input');
-}
-
-/** Push the username to Python so it can track per-user */
-function pushUsernameToGradio(name) {
-  setGradioValue('gradio-username-input', name);
 }

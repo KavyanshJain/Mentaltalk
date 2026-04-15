@@ -10,7 +10,7 @@
     </div>
     <div class="tab-row">
       <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
-      <button class="tab-btn"        onclick="switchTab('signup')">Create Account</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Create Account</button>
     </div>
 
     <!-- Error message (shown by JS) -->
@@ -18,8 +18,10 @@
 
     <!-- Sign-in form -->
     <div id="login-form">
-      <div class="fg"><label class="fl">Username</label><input class="fi" id="li-name" placeholder="Your username" autocomplete="username"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" id="li-pass" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="li-name" placeholder="Your username"
+          autocomplete="username"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="li-pass" type="password"
+          placeholder="Enter password" autocomplete="current-password"></div>
       <button class="fb" id="login-btn" onclick="doLogin()">Sign In →</button>
       <div class="divider">or</div>
       <button class="fb sec" onclick="doGuest()">👤 Continue as Guest</button>
@@ -27,14 +29,17 @@
 
     <!-- Sign-up form -->
     <div id="signup-form">
-      <div class="fg"><label class="fl">Username</label><input class="fi" id="su-name" placeholder="Choose a username" autocomplete="username"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" id="su-pass" type="password" placeholder="Create a password" autocomplete="new-password"></div>
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="su-name" placeholder="Choose a username"
+          autocomplete="username"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="su-pass" type="password"
+          placeholder="Create a password" autocomplete="new-password"></div>
       <button class="fb" id="signup-btn" onclick="doSignup()">Create Account →</button>
       <div class="divider">or</div>
       <button class="fb sec" onclick="doGuest()">👤 Continue as Guest</button>
     </div>
 
-    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px">🔒 Your conversations are private & secure</p>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px">🔒 Your conversations are private &
+      secure</p>
   </div>
 </div>
 
@@ -82,7 +87,8 @@
       <div id="chart-card">
         <div class="chart-ttl">7-DAY MOOD PATTERN</div>
         <div id="chart-body">
-          <p style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Log moods to see your pattern</p>
+          <p style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Log moods to see your pattern
+          </p>
         </div>
       </div>
 
@@ -121,6 +127,7 @@
           <div class="u-avatar" id="u-initial">G</div>
           <span id="u-name">Guest</span>
         </div>
+        <button class="logout-btn" id="logout-btn" onclick="doLogout()" title="Sign out">↩ Sign Out</button>
       </div>
     </div>
 
@@ -132,7 +139,8 @@
       Vandrevala Foundation: <strong>1860-2662-345</strong> (24/7) &nbsp;·&nbsp;
       NIMHANS: <strong>080-46110007</strong> &nbsp;·&nbsp;
       <em style="color:var(--muted)">Emergency: 112</em>
-      <button onclick="toggleCrisis()" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
+      <button onclick="toggleCrisis()"
+        style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
     </div>
 
     <!-- Content -->
@@ -157,11 +165,8 @@
       <div id="chat-wrap">
         <div id="msgs"></div>
         <div id="input-bar">
-          <textarea id="inp" rows="1"
-            placeholder="Share what's on your mind…"
-            oninput="autoGrow(this)"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();triggerSend()}"
-          ></textarea>
+          <textarea id="inp" rows="1" placeholder="Share what's on your mind…" oninput="autoGrow(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();triggerSend()}"></textarea>
           <button id="send-btn" onclick="triggerSend()">➤</button>
         </div>
       </div>
