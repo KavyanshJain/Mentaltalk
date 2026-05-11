@@ -1,5 +1,5 @@
 """
-Dashboard page for MindEase Mental Health Chatbot
+Dashboard page for MentalTalk Mental Health Chatbot
 Displays mood history and analytics with Plotly charts.
 """
 
@@ -14,9 +14,6 @@ from collections import Counter
 
 
 def show_dashboard_page():
-    """
-    Display the mood dashboard page.
-    """
     # Apply dark theme styling
     st.markdown("""
     <style>
@@ -71,9 +68,6 @@ def show_dashboard_page():
 
 
 def _show_sidebar():
-    """
-    Display the sidebar with navigation.
-    """
     with st.sidebar:
         # Apply dark theme styling
         st.markdown("""
@@ -227,9 +221,6 @@ def _show_sidebar():
 
 
 def _show_empty_state():
-    """
-    Display a friendly message when there's no mood data.
-    """
     st.markdown("""
     <div style="
         text-align: center;
@@ -255,12 +246,6 @@ def _show_empty_state():
 
 
 def _display_mood_analytics(mood_history: list):
-    """
-    Display mood analytics with charts.
-
-    Args:
-        mood_history: List of mood log dictionaries from the database
-    """
     # Convert to DataFrame
     df = pd.DataFrame(mood_history)
 
@@ -452,15 +437,6 @@ def _display_mood_analytics(mood_history: list):
 
 
 def _create_mood_score_chart(df: pd.DataFrame) -> go.Figure:
-    """
-    Create a line chart of mood scores over time.
-
-    Args:
-        df: DataFrame with mood history
-
-    Returns:
-        Plotly Figure
-    """
     fig = go.Figure()
 
     # Add mood score line
@@ -490,15 +466,6 @@ def _create_mood_score_chart(df: pd.DataFrame) -> go.Figure:
 
 
 def _create_mood_distribution_chart(df: pd.DataFrame) -> go.Figure:
-    """
-    Create a bar chart of mood label distribution.
-
-    Args:
-        df: DataFrame with mood history
-
-    Returns:
-        Plotly Figure
-    """
     # Count mood labels
     mood_counts = df['mood_label'].value_counts()
 
@@ -531,12 +498,6 @@ def _create_mood_distribution_chart(df: pd.DataFrame) -> go.Figure:
 
 
 def _display_summary_stats(df: pd.DataFrame):
-    """
-    Display summary statistics for mood history.
-
-    Args:
-        df: DataFrame with mood history
-    """
     col1, col2, col3 = st.columns(3)
 
     with col1:

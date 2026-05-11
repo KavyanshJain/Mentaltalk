@@ -1,5 +1,5 @@
 """
-Ingestion module for MindEase Mental Health Chatbot
+Ingestion module for MentalTalk Mental Health Chatbot
 Handles PDF loading, chunking, embedding, and ChromaDB upsert.
 """
 
@@ -27,24 +27,12 @@ _collection = None
 
 
 def _get_client() -> chromadb.PersistentClient:
-    """
-    Get or create the ChromaDB PersistentClient.
-
-    Returns:
-        ChromaDB PersistentClient instance
-    """
     # Ensure the directory exists
     Path(CHROMA_PERSIST_PATH).parent.mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(path=CHROMA_PERSIST_PATH)
 
 
 def get_collection():
-    """
-    Get or create the ChromaDB collection for mental health documents.
-
-    Returns:
-        ChromaDB Collection instance
-    """
     global _collection
     if _collection is None:
         client = _get_client()
@@ -53,29 +41,11 @@ def get_collection():
 
 
 def _generate_chunk_id(text: str) -> str:
-    """
-    Generate a unique ID for a text chunk.
-
-    Args:
-        text: The text chunk
-
-    Returns:
-        Unique ID string
-    """
     text_hash = hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
     return f"chunk_{text_hash}"
 
 
 def _load_pdf_text(pdf_path: str) -> str:
-    """
-    Load text from a PDF file.
-
-    Args:
-        pdf_path: Path to the PDF file
-
-    Returns:
-        Extracted text from the PDF
-    """
     text = ""
     try:
         reader = PdfReader(pdf_path)
@@ -89,17 +59,6 @@ def _load_pdf_text(pdf_path: str) -> str:
 
 
 def _chunk_text(text: str, chunk_size: int = 800, chunk_overlap: int = 100) -> List[str]:
-    """
-    Split text into chunks using RecursiveCharacterTextSplitter.
-
-    Args:
-        text: Text to split
-        chunk_size: Size of each chunk in characters
-        chunk_overlap: Overlap between chunks in characters
-
-    Returns:
-        List of text chunks
-    """
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -111,15 +70,6 @@ def _chunk_text(text: str, chunk_size: int = 800, chunk_overlap: int = 100) -> L
 
 
 def ingest_pdfs(pdf_dir: str) -> int:
-    """
-    Ingest all PDFs from a directory into ChromaDB.
-
-    Args:
-        pdf_dir: Directory containing PDF files
-
-    Returns:
-        Number of chunks ingested
-    """
     pdf_path = Path(pdf_dir)
     if not pdf_path.exists():
         print(f"PDF directory {pdf_dir} does not exist.")
@@ -178,12 +128,6 @@ def ingest_pdfs(pdf_dir: str) -> int:
 
 
 def is_collection_empty() -> bool:
-    """
-    Check if the ChromaDB collection is empty.
-
-    Returns:
-        True if the collection has no documents, False otherwise
-    """
     try:
         collection = get_collection()
         result = collection.get()

@@ -1,5 +1,5 @@
 """
-Retriever module for MindEase Mental Health Chatbot
+Retriever module for MentalTalk Mental Health Chatbot
 Handles context retrieval from ChromaDB.
 """
 
@@ -11,16 +11,6 @@ from src.rag.ingestion import get_collection
 
 
 def retrieve_context(query: str, n_results: int = 4) -> str:
-    """
-    Retrieve relevant context from ChromaDB for a query.
-
-    Args:
-        query: The user's query
-        n_results: Number of results to retrieve (default: 4)
-
-    Returns:
-        Combined context string from retrieved chunks, separated by newlines and dashes
-    """
     try:
         collection = get_collection()
 
@@ -49,12 +39,6 @@ def retrieve_context(query: str, n_results: int = 4) -> str:
 
 
 def get_collection_info() -> dict:
-    """
-    Get information about the ChromaDB collection.
-
-    Returns:
-        Dictionary with collection statistics
-    """
     try:
         collection = get_collection()
         result = collection.get()

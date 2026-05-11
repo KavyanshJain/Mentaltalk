@@ -1,5 +1,5 @@
 """
-Gemini client module for MindEase Mental Health Chatbot
+Gemini client module for MentalTalk Mental Health Chatbot
 Handles communication with Google's Generative AI API.
 """
 
@@ -27,12 +27,6 @@ _model = None
 
 
 def _get_model():
-    """
-    Get or create the GenerativeModel instance.
-
-    Returns:
-        genai.GenerativeModel instance
-    """
     global _model
     if _model is None:
         if not GEMINI_API_KEY:
@@ -49,20 +43,6 @@ def _get_model():
 
 
 def _convert_history_to_gemini_format(db_history: List[Dict[str, str]]) -> List[Dict[str, List[str]]]:
-    """
-    Convert database message history to Gemini format.
-
-    Database format: [{"role": "user", "content": "message"}, ...]
-    Gemini format: [{"role": "user", "parts": ["message"]}, ...]
-
-    Note: Database uses 'assistant' but Gemini expects 'model'
-
-    Args:
-        db_history: List of message dicts from database
-
-    Returns:
-        List of message dicts in Gemini format
-    """
     gemini_history = []
     for msg in db_history:
         role = msg.get("role", "user")
@@ -79,17 +59,6 @@ def _convert_history_to_gemini_format(db_history: List[Dict[str, str]]) -> List[
 
 
 def get_gemini_response(user_message: str, chat_history: List[Dict[str, str]], rag_context: str) -> str:
-    """
-    Get a response from the Gemini model.
-
-    Args:
-        user_message: The current user message
-        chat_history: List of previous messages as dicts with 'role' and 'content'
-        rag_context: Retrieved context from mental health resources
-
-    Returns:
-        The model's response text
-    """
     try:
         model = _get_model()
 
@@ -117,12 +86,6 @@ def get_gemini_response(user_message: str, chat_history: List[Dict[str, str]], r
 
 
 def test_connection() -> bool:
-    """
-    Test the connection to the Gemini API.
-
-    Returns:
-        True if connection is successful, False otherwise
-    """
     try:
         model = _get_model()
         # Send a simple test message

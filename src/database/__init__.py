@@ -1,5 +1,5 @@
 """
-Database module for MindEase Mental Health Chatbot
+Database module for MentalTalk Mental Health Chatbot
 Handles PostgreSQL connections, schema initialization, and data operations.
 """
 
@@ -21,7 +21,6 @@ _connection_pool = None
 
 
 def get_connection_pool():
-    """Get or create the connection pool."""
     global _connection_pool
     if _connection_pool is None:
         if not NEON_DATABASE_URL:
@@ -39,20 +38,6 @@ def get_connection_pool():
 
 @contextmanager
 def get_connection():
-    """
-    Context manager for getting a database connection.
-    Yields a connection and ensures it's returned to the pool.
-    Caller is responsible for creating and closing cursors.
-
-    Usage:
-        with get_connection() as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute("SELECT * FROM users")
-                results = cursor.fetchall()
-            finally:
-                cursor.close()
-    """
     pool = get_connection_pool()
     conn = pool.getconn()
     try:
@@ -66,11 +51,6 @@ def get_connection():
 
 
 def init_db():
-    """
-    Initialize the database schema.
-    Creates all required tables if they don't exist.
-    Also handles migrations for existing tables.
-    """
     create_tables_sql = """
     -- users table
     CREATE TABLE IF NOT EXISTS users (
@@ -138,15 +118,6 @@ CREATE INDEX IF NOT EXISTS idx_mood_logs_logged_at ON mood_logs(logged_at);
 
 
 def create_session(user_id: int) -> int:
-    """
-    Create a new chat session for a user.
-
-    Args:
-        user_id: The ID of the user
-
-    Returns:
-        The ID of the newly created session
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -162,17 +133,6 @@ def create_session(user_id: int) -> int:
 
 
 def save_message(session_id: int, role: str, content: str) -> int:
-    """
-    Save a message to the database.
-
-    Args:
-        session_id: The ID of the chat session
-        role: The role of the message ('user' or 'assistant')
-        content: The content of the message
-
-    Returns:
-        The ID of the saved message
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -188,15 +148,6 @@ def save_message(session_id: int, role: str, content: str) -> int:
 
 
 def get_session_messages(session_id: int) -> List[Dict[str, Any]]:
-    """
-    Get all messages for a chat session.
-
-    Args:
-        session_id: The ID of the chat session
-
-    Returns:
-        List of message dictionaries with keys: id, session_id, role, content, created_at
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -212,18 +163,6 @@ def get_session_messages(session_id: int) -> List[Dict[str, Any]]:
 
 
 def log_mood(user_id: int, mood_label: str, mood_score: float, message_snippet: str) -> int:
-    """
-    Log a mood entry to the database.
-
-    Args:
-        user_id: The ID of the user
-        mood_label: The mood category label
-        mood_score: The mood score (-1.0 to 1.0)
-        message_snippet: A snippet of the message that triggered this mood log
-
-    Returns:
-        The ID of the logged mood entry
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -243,16 +182,6 @@ def log_mood(user_id: int, mood_label: str, mood_score: float, message_snippet: 
 
 
 def get_mood_history(user_id: int, days: int = 30) -> List[Dict[str, Any]]:
-    """
-    Get mood history for a user within the specified time period.
-
-    Args:
-        user_id: The ID of the user
-        days: Number of days to look back (default: 30)
-
-    Returns:
-        List of mood log dictionaries with keys: id, user_id, mood_label, mood_score, message_snippet, logged_at
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -273,15 +202,6 @@ def get_mood_history(user_id: int, days: int = 30) -> List[Dict[str, Any]]:
 
 
 def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
-    """
-    Get a user by their ID.
-
-    Args:
-        user_id: The ID of the user
-
-    Returns:
-        User dictionary or None if not found
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -299,15 +219,6 @@ def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
 
 
 def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
-    """
-    Get a user by their username.
-
-    Args:
-        username: The username to search for
-
-    Returns:
-        User dictionary or None if not found
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -325,16 +236,6 @@ def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
 
 
 def create_user(username: str, password_hash: str) -> int:
-    """
-    Create a new user.
-
-    Args:
-        username: The username
-        password_hash: The bcrypt-hashed password
-
-    Returns:
-        The ID of the newly created user
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -350,15 +251,6 @@ def create_user(username: str, password_hash: str) -> int:
 
 
 def get_all_sessions(user_id: int) -> List[Dict[str, Any]]:
-    """
-    Get all chat sessions for a user.
-
-    Args:
-        user_id: The ID of the user
-
-    Returns:
-        List of session dictionaries
-    """
     with get_connection() as conn:
         cursor = conn.cursor()
         try:

@@ -1,5 +1,5 @@
 """
-Authentication page for MindEase Mental Health Chatbot
+Authentication page for MentalTalk Mental Health Chatbot
 Handles login and signup UI with Streamlit.
 """
 
@@ -8,9 +8,6 @@ from src.auth import signup, login
 
 
 def show_auth_page():
-    """
-    Display the authentication page with Login and Sign Up tabs.
-    """
     # Apply dark theme styling
     st.markdown("""
     <style>
@@ -59,9 +56,6 @@ def show_auth_page():
 
 
 def _show_login_tab():
-    """
-    Display the login form.
-    """
     st.header("Login")
 
     with st.form("login_form"):
@@ -91,9 +85,6 @@ def _show_login_tab():
 
 
 def _show_signup_tab():
-    """
-    Display the signup form.
-    """
     st.header("Create Account")
 
     with st.form("signup_form"):

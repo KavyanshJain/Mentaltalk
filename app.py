@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Set page config first (must be before any other Streamlit calls)
+# Page config
 st.set_page_config(
     page_title="MentalTalk",
     page_icon="🧠",
@@ -23,10 +23,6 @@ from src.rag.ingestion import ingest_pdfs, is_collection_empty
 
 
 def main():
-    """
-    Main application entrypoint.
-    Handles initialization and page routing.
-    """
     # Initialize database
     _initialize_database()
 
@@ -41,9 +37,6 @@ def main():
 
 
 def _initialize_database():
-    """
-    Initialize the database schema on first run.
-    """
     try:
         init_db()
     except Exception as e:
@@ -52,9 +45,6 @@ def _initialize_database():
 
 
 def _initialize_rag():
-    """
-    Initialize the RAG system (ingest PDFs if collection is empty).
-    """
     try:
         # Check if ChromaDB collection is empty
         if is_collection_empty():
@@ -68,9 +58,6 @@ def _initialize_rag():
 
 
 def _initialize_session_state():
-    """
-    Initialize Streamlit session state variables.
-    """
     # Initialize logged_in state
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
@@ -96,9 +83,6 @@ def _initialize_session_state():
 
 
 def _route_page():
-    """
-    Route to the appropriate page based on authentication state.
-    """
     if not st.session_state.logged_in:
         # Show auth page
         from src.ui.auth_page import show_auth_page

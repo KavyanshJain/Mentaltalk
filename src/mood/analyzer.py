@@ -1,5 +1,5 @@
 """
-Mood analyzer module for MindEase Mental Health Chatbot
+Mood analyzer module for MentalTalk Mental Health Chatbot
 Performs keyword-based mood detection from chat text.
 """
 
@@ -55,15 +55,6 @@ MOOD_CATEGORIES = {
 
 
 def _find_keywords_in_text(text: str) -> List[Tuple[str, float]]:
-    """
-    Find all mood keywords in the text and return their weights.
-
-    Args:
-        text: The text to analyze
-
-    Returns:
-        List of tuples (category_name, weight) for matched keywords
-    """
     lower_text = text.lower()
     matches = []
 
@@ -78,15 +69,6 @@ def _find_keywords_in_text(text: str) -> List[Tuple[str, float]]:
 
 
 def _calculate_score(matches: List[Tuple[str, float]]) -> Tuple[str, float]:
-    """
-    Calculate the overall mood score from keyword matches.
-
-    Args:
-        matches: List of (category, weight) tuples from keyword matching
-
-    Returns:
-        Tuple of (label, score)
-    """
     if not matches:
         # Default to neutral if no keywords match
         return "Neutral", 0.15
@@ -116,18 +98,6 @@ def _calculate_score(matches: List[Tuple[str, float]]) -> Tuple[str, float]:
 
 
 def analyze_mood(text: str) -> Dict[str, Any]:
-    """
-    Analyze the mood of a text message.
-
-    Args:
-        text: The text to analyze
-
-    Returns:
-        Dictionary with keys:
-        - label: The mood category label
-        - score: The mood score (-1.0 to 1.0)
-        - snippet: First 100 characters of the text
-    """
     # Find keyword matches
     matches = _find_keywords_in_text(text)
 
@@ -145,10 +115,4 @@ def analyze_mood(text: str) -> Dict[str, Any]:
 
 
 def get_mood_categories() -> Dict[str, Dict[str, any]]:
-    """
-    Get the mood category definitions.
-
-    Returns:
-        Dictionary of mood categories with their configurations
-    """
     return MOOD_CATEGORIES

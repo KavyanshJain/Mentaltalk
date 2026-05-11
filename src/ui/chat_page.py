@@ -1,5 +1,5 @@
 """
-Chat page for MindEase Mental Health Chatbot
+Chat page for MentalTalk Mental Health Chatbot
 Handles the main chat interface with Streamlit.
 """
 
@@ -12,9 +12,6 @@ from src.mood.analyzer import analyze_mood
 
 
 def show_chat_page():
-    """
-    Display the chat interface page.
-    """
     # Initialize session state for chat
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -84,9 +81,6 @@ def show_chat_page():
 
 
 def _show_sidebar():
-    """
-    Display the sidebar with navigation and actions.
-    """
     with st.sidebar:
         # Apply dark theme styling
         st.markdown("""
@@ -239,9 +233,6 @@ def _show_sidebar():
 
 
 def _display_messages():
-    """
-    Display all chat messages in the session.
-    """
     # Container for chat messages with scrollable area
     message_container = st.container(height=600)
 
@@ -307,9 +298,6 @@ def _display_messages():
 
 
 def _handle_chat_input():
-    """
-    Handle user input from the chat input box.
-    """
     # Apply custom styling to chat input
     st.markdown("""
     <style>
