@@ -21,8 +21,9 @@ _connection_pool = None
 
 
 def get_connection_pool():
+    """Get or create the connection pool."""
     global _connection_pool
-    if _connection_pool is None:
+    if _connection_pool is None or _connection_pool.closed:
         if not NEON_DATABASE_URL:
             raise ValueError(
                 "NEON_DATABASE_URL environment variable is not set. "
@@ -32,23 +33,37 @@ def get_connection_pool():
             minconn=1,
             maxconn=10,
             dsn=NEON_DATABASE_URL,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5,
         )
     return _connection_pool
 
 
 @contextmanager
+@contextmanager
 def get_connection():
-    pool = get_connection_pool()
-    conn = pool.getconn()
-    try:
-        conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
-        yield conn
-    except Exception as e:
-        conn.rollback()
-        raise e
-    finally:
-        pool.putconn(conn)
-
+    global _connection_pool
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            pool = get_connection_pool()
+            conn = pool.getconn()
+            try:
+                conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
+                yield conn
+                return
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                pool.putconn(conn)
+        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+            # Pool is stale — reset and retry
+            _connection_pool = None
+            if attempt == max_retries - 1:
+                raise
 
 def init_db():
     create_tables_sql = """
