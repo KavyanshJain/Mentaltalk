@@ -14,7 +14,7 @@
 
 ## What is this?
 
-I built this as part of my minor project at Jecrc University. Mental health is something I care about, and I wanted to create a simple space where people can talk and get thoughtful responses backed by actual mental health resources. It's not a replacement for professional help, but it's a start — and honestly, it was a great way for me to learn about LLM applications, RAG, and full-stack development.
+We built this as part of my minor project at Jecrc University. Mental health is something we care about, and we wanted to create a simple space where people can talk and get thoughtful responses backed by actual mental health resources. It's not a replacement for professional help, but it's a start — and honestly, it was a great way for me to learn about LLM applications, RAG, and full-stack development.
 
 ## Features
 
@@ -118,6 +118,4 @@ Honestly, there's a lot that could be better. Right now, the app is pretty basic
 
 ## Acknowledgements
 
-This project wouldn't have been possible without the mental health resources from [PDF sources] that I used for the RAG knowledge base. A big thanks to my professors and peers at Jecrc University for their guidance and support throughout this minor project.
-
-The app is deployed on Streamlit Community Cloud, and the model embeddings are available on Hugging Face at [huggingface.co/Kavyansh575/mentaltalk](https://huggingface.co/Kavyansh575/mentaltalk).
+This project wouldn't have been possible without the mental health resources from various source in `data/pdfs` that we used for the RAG knowledge base. A big thanks to our professors and peers at Jecrc University for their guidance and support throughout this minor project.
