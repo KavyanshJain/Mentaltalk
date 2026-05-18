@@ -41,7 +41,7 @@ def get_connection_pool():
     return _connection_pool
 
 
-@contextmanager
+
 @contextmanager
 def get_connection():
     global _connection_pool
